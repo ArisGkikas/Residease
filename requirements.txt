@@ -5,3 +5,6 @@ googlemaps
 pandas
 python-dotenv
 requests
+
+
+#pip freeze > requirements.txt
