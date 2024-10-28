@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Real-Time Map with Parking</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+<body>
+    <h3>Real-Time Tracking and Parking Payment</h3>
+    <div id="map" style="height: 80vh;"></div>
+
+    <!-- Parking Form -->
+    <div id="parking-form">
+        <h4>Find Parking</h4>
+        <button onclick="findParking()">Check Parking Nearby</button>
+        
+        <h4>Instant Payment</h4>
+        <form onsubmit="payParking(event)">
+            <input type="text" id="location_id" placeholder="Location ID" required>
+            <input type="text" id="vehicle_id" placeholder="Vehicle ID" required>
+            <input type="number" id="duration" placeholder="Duration (minutes)" required>
+            <button type="submit">Pay for Parking</button>
+        </form>
+    </div>
+
+    <script>
+        const socket = io.connect(window.location.origin);
+
+        function findParking() {
+            navigator.geolocation.getCurrentPosition(position => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                fetch(`/parking_availability?latitude=${latitude}&longitude=${longitude}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("Parking availability:", data);
+                        // Display parking data or handle it as needed
+                    });
+            });
+        }
+
+        function payParking(event) {
+            event.preventDefault();
+
+            const locationId = document.getElementById("location_id").value;
+            const vehicleId = document.getElementById("vehicle_id").value;
+            const duration = document.getElementById("duration").value;
+
+            fetch("/pay_parking", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ location_id: locationId, vehicle_id: vehicleId, duration: duration })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert("Payment failed");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+#Parking Form: Enables users to find nearby parking and make payments directly from the map.html page.

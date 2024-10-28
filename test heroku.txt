@@ -1,0 +1,16 @@
+#bash 
+#Testing:
+#http://localhost:5000 , replace latitude and longitude
+
+curl -X GET "http://localhost:5000/parking_availability?latitude=51.5074&longitude=-0.1278"
+
+#Test the parking_availability and pay_parking endpoints locally to ensure they return the expected data. Deploy to Heroku with Config Vars set for production.
+
+curl -X POST "http://localhost:5000/pay_parking" -H "Content-Type: application/json" -d '{
+    "location_id": "location_example_id",
+    "vehicle_id": "vehicle_example_id",
+    "duration": 60
+}'
+
+#Replace location_example_id, vehicle_example_id, and duration with actual values.
+#Expected result: JSON response with either a success message or an error message if the payment fails.

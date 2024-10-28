@@ -1,0 +1,75 @@
+pip install requests
+
+import os
+import requests
+from flask import Flask, jsonify, request
+from auth import register_user, authenticate_user, login_manager
+from config import get_db_connection
+
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
+login_manager.init_app(app)
+
+# RingGo API URL and headers
+RINGGO_API_BASE_URL = "https://api.myringgo.com"
+RINGGO_API_KEY = os.getenv("RINGGO_API_KEY")
+RINGGO_CLIENT_ID = os.getenv("RINGGO_CLIENT_ID")
+
+# Headers with authentication data for RingGo
+def ringgo_headers():
+    return {
+        "Authorization": f"Bearer {RINGGO_API_KEY}",
+        "Client-ID": RINGGO_CLIENT_ID,
+        "Content-Type": "application/json"
+    }
+
+# Endpoint to check parking availability near a location
+@app.route('/parking_availability', methods=['GET'])
+def parking_availability():
+    latitude = request.args.get('latitude')
+    longitude = request.args.get('longitude')
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "radius": 1000  # meters; adjust as necessary
+    }
+    response = requests.get(f"{RINGGO_API_BASE_URL}/parking/availability", headers=ringgo_headers(), params=params)
+    
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    else:
+        return jsonify({"error": "Failed to retrieve parking data"}), response.status_code
+
+# Endpoint to make an instant parking payment
+@app.route('/pay_parking', methods=['POST'])
+def pay_parking():
+    data = request.json
+    location_id = data['location_id']
+    vehicle_id = data['vehicle_id']
+    duration = data['duration']  # Duration in minutes
+
+    payload = {
+        "location_id": location_id,
+        "vehicle_id": vehicle_id,
+        "duration": duration
+    }
+    response = requests.post(f"{RINGGO_API_BASE_URL}/parking/payments", headers=ringgo_headers(), json=payload)
+
+    if response.status_code == 201:
+        return jsonify({"message": "Parking payment successful"}), 201
+    else:
+        return jsonify({"error": "Parking payment failed"}), response.status_code
+
+
+
+
+
+
+
+
+
+
+#Backend Integration:
+
+#Endpoints: parking_availability and pay_parking for checking parking and initiating payments.
+#Environment Variables: Use RINGGO_API_KEY and RINGGO_CLIENT_ID to store API credentials securely.

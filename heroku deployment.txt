@@ -1,0 +1,81 @@
+
+To test the parking_availability and pay_parking endpoints locally before deploying to Heroku, you can use Postman or curl commands. Below are steps and code examples for both methods.
+
+1. Testing Locally with curl
+Run these commands in your terminal to check each endpoint.
+
+Test parking_availability Endpoint
+Assuming you are running the Flask app on http://localhost:5000, replace latitude and longitude values with actual coordinates.
+
+bash
+Copy code
+curl -X GET "http://localhost:5000/parking_availability?latitude=51.5074&longitude=-0.1278"
+This request checks for available parking spots near the provided latitude and longitude.
+Expected result: JSON response containing parking options (assuming the RingGo API is set up and accessible).
+Test pay_parking Endpoint
+For the payment endpoint, send a POST request with location_id, vehicle_id, and duration in the body.
+
+bash
+Copy code
+curl -X POST "http://localhost:5000/pay_parking" -H "Content-Type: application/json" -d '{
+    "location_id": "location_example_id",
+    "vehicle_id": "vehicle_example_id",
+    "duration": 60
+}'
+Replace location_example_id, vehicle_example_id, and duration with actual values.
+Expected result: JSON response with either a success message or an error message if the payment fails.
+2. Testing Locally with Postman
+If you prefer using Postman, follow these steps to test the endpoints.
+
+Test parking_availability in Postman
+Open Postman and create a GET request.
+Enter the URL http://localhost:5000/parking_availability.
+Add Query Parameters:
+latitude: e.g., 51.5074
+longitude: e.g., -0.1278
+Send the request.
+Check the response for parking availability details.
+Test pay_parking in Postman
+Open Postman and create a POST request.
+
+Enter the URL http://localhost:5000/pay_parking.
+
+#In the Body section, select raw and choose JSON.
+
+#Add the following JSON data:
+
+json
+Copy code
+{
+    "location_id": "location_example_id",
+    "vehicle_id": "vehicle_example_id",
+    "duration": 60
+}
+#Replace values as needed.
+
+#Send the request and check the response for a success or failure message.
+
+#3. Deploy to Heroku
+#Push Code to Heroku:
+
+#Commit your changes and deploy to Heroku using Git.
+#bash
+
+git add .
+git commit -m "Added parking availability and payment endpoints"
+git push heroku main
+Set Config Vars in Heroku:
+
+#Go to your Heroku dashboard, navigate to your app’s Settings, and add the following Config Vars:
+RINGGO_API_KEY
+RINGGO_CLIENT_ID
+SECRET_KEY (for Flask session management)
+#Test the Endpoints on Heroku:
+
+#Once deployed, use Postman or curl commands to test the live endpoints, replacing localhost with your Heroku app URL:
+
+
+curl -X GET "https://your-heroku-app.herokuapp.com/parking_availability?latitude=51.5074&longitude=-0.1278"
+#Check that responses match expectations, verifying that both parking availability and payment endpoints function as intended in production.
+
+#This setup should enable you to test both locally and on Heroku, ensuring the RingGo API integration works as expected in each environment.
