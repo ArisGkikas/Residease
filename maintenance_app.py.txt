@@ -154,3 +154,18 @@ if __name__ == '__main__':
     init_db('company_maintenance_data.xlsx')  # Load initial data from Excel
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host='0.0.0.0', port=port, debug=True)
+
+#Explanation of Key Sections in the Combined Code
+#Environment Variables: The Google Maps API key and secret keys are loaded from environment variables. Ensure you set these up in a .env file locally and as Config Vars in Heroku.
+
+#User Authentication: Routes for registration, login, and logout are implemented using flask_login, along with protected routes that require authentication (e.g., /map).
+
+#Database Setup: The init_db function reads from an Excel file and populates the SQLite tasks table with predefined tasks.
+
+#Google Maps API Integration: The calculate_route endpoint calculates an optimized route based on task locations, and the result is returned in JSON format.
+
+#Real-Time Location Updates with SocketIO: The update_location function listens for updates from team members and broadcasts their locations to all connected clients in real time.
+
+#Parking Payment Placeholder: The /pay_parking endpoint acts as a placeholder for integrating with the RingGo API or another parking service in the future.
+
+#Heroku Compatibility: The code sets up a dynamic port, ensuring it runs on both local and Heroku environments with socketio.run().
