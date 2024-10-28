@@ -1,16 +1,40 @@
+import os
+import sqlite3
+import googlemaps
+import pandas as pd
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_socketio import SocketIO, emit
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
 from auth import register_user, authenticate_user, login_manager
 from config import get_db_connection
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Change this for security
+load_dotenv()
+app.secret_key = os.getenv("SECRET_KEY", 'your_secret_key_here')  # Update for security
 login_manager.init_app(app)
 socketio = SocketIO(app)
 
+# Google Maps API Client
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY)
+
 # Dictionary to store real-time locations of team members
 locations = {}
+
+# Database Setup and Load from Excel
+def init_db(excel_file):
+    data = pd.read_excel(excel_file)
+    conn = sqlite3.connect('maintenance.db')
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS tasks
+                     (id INTEGER PRIMARY KEY, location TEXT, task TEXT, duration INTEGER)''')
+    for _, row in data.iterrows():
+        cursor.execute("INSERT INTO tasks (location, task, duration) VALUES (?, ?, ?)",
+                       (row['location'], row['task'], row['duration']))
+    conn.commit()
+    conn.close()
 
 # Help Center page
 @app.route('/help_center')
@@ -56,17 +80,77 @@ def logout():
 def map():
     return render_template('map.html')
 
+# Endpoint to add tasks individually
+@app.route('/add_task', methods=['POST'])
+def add_task():
+    data = request.json
+    location = data['location']
+    task = data['task']
+    duration = data['duration']
+    conn = sqlite3.connect('maintenance.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO tasks (location, task, duration) VALUES (?, ?, ?)",
+                   (location, task, duration))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'Task added successfully'}), 201
+
+# Calculate Optimized Route
+@app.route('/calculate_route', methods=['GET'])
+def calculate_route():
+    conn = sqlite3.connect('maintenance.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT location, duration FROM tasks")
+    tasks = cursor.fetchall()
+    conn.close()
+   
+    locations = [task[0] for task in tasks]
+    durations = [task[1] for task in tasks]
+   
+    route_data = gmaps.directions(
+        origin=locations[0],
+        destination=locations[-1],
+        waypoints=locations[1:-1],
+        optimize_waypoints=True
+    )
+   
+    optimized_order = route_data[0]['waypoint_order']
+    ordered_tasks = [(locations[i], durations[i]) for i in optimized_order]
+   
+    total_time = sum(durations) + sum([leg['duration']['value'] for leg in route_data[0]['legs']])
+   
+    return jsonify({
+        'ordered_tasks': ordered_tasks,
+        'total_time_minutes': total_time // 60,
+        'total_time_hours': total_time // 3600
+    })
+
+# Parking Ticket Payment (Placeholder)
+@app.route('/pay_parking', methods=['POST'])
+def pay_parking():
+    data = request.json
+    location = data['location']
+    duration = data['duration']
+   
+    # Placeholder for API integration with RingGo or another parking service
+    payment_response = {
+        'status': 'Parking ticket paid',
+        'location': location,
+        'duration': duration
+    }
+   
+    return jsonify(payment_response), 200
+
 # Handle incoming location updates from team members
 @socketio.on('update_location')
 def update_location(data):
     team_member_id = data['team_member_id']
     latitude = data['latitude']
     longitude = data['longitude']
-    # Store the location for the team member
     locations[team_member_id] = {'latitude': latitude, 'longitude': longitude}
-    # Broadcast updated location to all clients
     emit('location_update', {'team_member_id': team_member_id, 'latitude': latitude, 'longitude': longitude}, broadcast=True)
 
-# Run the app with SocketIO
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    init_db('company_maintenance_data.xlsx')  # Load initial data from Excel
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=True)
