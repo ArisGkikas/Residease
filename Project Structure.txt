@@ -1,0 +1,16 @@
+bash
+Copy code
+/project-root
+│
+├── maintenance_app.py           # Main Flask application
+├── auth.py                       # Authentication functions
+├── config.py                     # Configuration for database setup and connection
+├── requirements.txt              # Dependencies for the app
+├── runtime.txt                   # Specifies Python version
+├── templates/
+│   ├── map.html                  # Real-time map display with Google Maps
+│   ├── help_center.html          # Static HTML template for the Help Center
+│   ├── login.html                # Login page for user authentication
+│   └── register.html             # Registration page
+├── Procfile                      # Heroku deployment file
+└── test_app.py                   # Unit tests (optional)

@@ -1,0 +1,72 @@
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_socketio import SocketIO, emit
+from auth import register_user, authenticate_user, login_manager
+from config import get_db_connection
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Change this for security
+login_manager.init_app(app)
+socketio = SocketIO(app)
+
+# Dictionary to store real-time locations of team members
+locations = {}
+
+# Help Center page
+@app.route('/help_center')
+def help_center():
+    return render_template('help_center.html')
+
+# Register a new user
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        register_user(username, password)
+        flash("Registration successful! You can now log in.")
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+# Login route
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = authenticate_user(username, password)
+        if user:
+            login_user(user)
+            flash("Logged in successfully!")
+            return redirect(url_for('map'))
+        flash("Invalid credentials. Please try again.")
+    return render_template('login.html')
+
+# Logout route
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("Logged out successfully!")
+    return redirect(url_for('login'))
+
+# Real-time map view (protected route)
+@app.route('/map')
+@login_required
+def map():
+    return render_template('map.html')
+
+# Handle incoming location updates from team members
+@socketio.on('update_location')
+def update_location(data):
+    team_member_id = data['team_member_id']
+    latitude = data['latitude']
+    longitude = data['longitude']
+    # Store the location for the team member
+    locations[team_member_id] = {'latitude': latitude, 'longitude': longitude}
+    # Broadcast updated location to all clients
+    emit('location_update', {'team_member_id': team_member_id, 'latitude': latitude, 'longitude': longitude}, broadcast=True)
+
+# Run the app with SocketIO
+if __name__ == '__main__':
+    socketio.run(app, debug=True)
