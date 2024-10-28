@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Register</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <h2>Register</h2>
+    <form method="post" action="{{ url_for('register') }}">
+        <label>Username:</label>
+        <input type="text" name="username" required>
+        <label>Password:</label>
+        <input type="password" name="passwordHere’s the last part of the `register.html` code for the registration page:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Register</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <h2>Register</h2>
+    <form method="post" action="{{ url_for('register') }}">
+        <label>Username:</label>
+        <input type="text" name="username" required>
+        <label>Password:</label>
+        <input type="password" name="password" required>
+        <button type="submit">Register</button>
+    </form>
+</body>
+</html>

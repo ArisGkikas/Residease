@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Help Center</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <h1>Help Center</h1>
+    <div>
+        <h2>Frequently Asked Questions</h2>
+        <p><strong>Q:</strong> How do I register?</p>
+        <p><strong>A:</strong> Go to the registration page and enter your details.</p>
+    </div>
+</body>
+</html>
